@@ -17,6 +17,8 @@ public class ProductoService
 
     // atributo final que es una lista de productos, inicializada como un ArrayList vacío
     private final List<Producto> productos = new ArrayList<>();
+    private Long siguienteId = 2L;
+
     public ProductoService()
     {
         // Crear un producto de ejemplo y agregarlo a la lista de productos
@@ -29,7 +31,7 @@ public class ProductoService
         // Retorna la lista de productos
         return productos;
     }
-    public Optional<Producto> buscar_Por_Id(Long id) 
+    public Optional<Producto> buscarPorId(Long id) 
     {
         // for each para recorrer la lista de productos y buscar un producto por su id
         for(Producto p: productos)
@@ -44,7 +46,13 @@ public class ProductoService
         // Para que explicar xd
 
     }
+    public Producto crearProducto(Producto producto)
+    {
+        // Asignar un ID único al nuevo producto
+        producto.setId(siguienteId++);
+        // Agregar el producto a la lista de productos
+        productos.add(producto);
+        return producto;
 
-
-    
+    }    
 } 
