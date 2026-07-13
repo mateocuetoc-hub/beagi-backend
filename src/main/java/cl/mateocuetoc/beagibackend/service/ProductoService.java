@@ -55,4 +55,22 @@ public class ProductoService
         return producto;
 
     }    
+    public Optional<Producto> actualizarProducto(Long id, Producto productoActualizado) 
+    {
+        // Buscar el producto por su ID
+        Optional<Producto> productoExistente = buscarPorId(id);
+        if (productoExistente.isEmpty()) 
+        {
+            return Optional.empty();
+        }
+        Producto producto = productoExistente.get();
+            // Actualizar los campos del producto existente con los valores del producto actualizado
+        producto.setNombre(productoActualizado.getNombre());
+        producto.setDescripcion(productoActualizado.getDescripcion());
+        producto.setPrecio(productoActualizado.getPrecio());
+        producto.setStock(productoActualizado.getStock());
+        producto.setDisponible(productoActualizado.getDisponible());
+        producto.setCategoria(productoActualizado.getCategoria());
+        return Optional.of(producto);
+    }
 } 
