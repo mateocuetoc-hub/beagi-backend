@@ -1,12 +1,26 @@
 package cl.mateocuetoc.beagibackend.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+
 public class Producto {
 
     private Long id;
+
+    @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
+
     private String descripcion;
+
+    @NotNull(message = "El precio es obligatorio")
+    @PositiveOrZero(message = "El precio no puede ser negativo")
     private Integer precio;
+
+    @NotNull(message = "El stock es obligatorio")
+    @PositiveOrZero(message = "El stock no puede ser negativo")
     private Integer stock;
+
     private Boolean disponible;
     private String categoria;
 

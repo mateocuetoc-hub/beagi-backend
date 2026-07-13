@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,13 +50,18 @@ public class ProductoController
 
     }
     @PostMapping
-    public ResponseEntity<Producto> crearProducto(@RequestBody Producto producto) 
+    public ResponseEntity<Producto> crearProducto(
+        @Valid @RequestBody Producto producto)
     {
         Producto nuevoProducto = productoService.crearProducto(producto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoProducto);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(nuevoProducto);
     }
+    
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> actualizarProducto(@PathVariable Long id, @RequestBody Producto datosActualizados)
+    public ResponseEntity<Producto> actualizarProducto(@PathVariable Long id,@Valid @RequestBody Producto datosActualizados)
     {
         Optional<Producto> productoActualizado = productoService.actualizarProducto(id, datosActualizados);
         if (productoActualizado.isEmpty()) 
