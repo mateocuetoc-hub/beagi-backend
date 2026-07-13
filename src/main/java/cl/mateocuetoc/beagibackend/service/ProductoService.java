@@ -73,4 +73,16 @@ public class ProductoService
         producto.setCategoria(productoActualizado.getCategoria());
         return Optional.of(producto);
     }
+    public boolean eliminarProducto(Long id) 
+    {
+        // Buscar el producto por su ID
+        Optional<Producto> productoExistente = buscarPorId(id);
+        if (productoExistente.isEmpty()) 
+        {
+            return false;
+        }
+        // Eliminar el producto de la lista de productos
+        productos.remove(productoExistente.get());
+        return true;
+    }
 } 

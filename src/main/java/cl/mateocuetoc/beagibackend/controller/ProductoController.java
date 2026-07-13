@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import cl.mateocuetoc.beagibackend.model.Producto;
 import cl.mateocuetoc.beagibackend.service.ProductoService;
 
@@ -61,12 +62,23 @@ public class ProductoController
         {
             return ResponseEntity.notFound().build();
         } 
-        
+
         return ResponseEntity.ok(productoActualizado.get());
 
         
 
 
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id)
+    {
+        
+        boolean eliminado = productoService.eliminarProducto(id);
+        if (!eliminado) 
+        {
+            return ResponseEntity.notFound().build();
+        } 
+        return ResponseEntity.noContent().build();
     }
     
 }
