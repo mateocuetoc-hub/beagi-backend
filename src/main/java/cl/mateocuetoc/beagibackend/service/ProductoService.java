@@ -1,88 +1,50 @@
-
 package cl.mateocuetoc.beagibackend.service;
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-
 import cl.mateocuetoc.beagibackend.model.Producto;
+import cl.mateocuetoc.beagibackend.repository.ProductoRepository;
 
-// Spring crea y administra un bean de esta clase, que puede ser inyectado en otras clases con @Autowired
 @Service
+public class ProductoService {
 
-public class ProductoService 
-{
+    private final ProductoRepository productoRepository;
 
-    // atributo final que es una lista de productos, inicializada como un ArrayList vacío
-    private final List<Producto> productos = new ArrayList<>();
-    private Long siguienteId = 2L;
-
-    public ProductoService()
-    {
-        // Crear un producto de ejemplo y agregarlo a la lista de productos
-        Producto abrigo = new Producto(1L, "Abrigo", "Abrigo largo de mujer", 15990, 3, true, "Abrigos");
-        productos.add(abrigo);
-
+    public ProductoService(ProductoRepository productoRepository) {
+        this.productoRepository = productoRepository;
     }
-    public List<Producto> listarProductos() 
-    {
-        // Retorna la lista de productos
-        return productos;
+
+    public List<Producto> listarProductos() {
+        return productoRepository.findAll();
     }
-    public Optional<Producto> buscarPorId(Long id) 
-    {
-        // for each para recorrer la lista de productos y buscar un producto por su id
-        for(Producto p: productos)
-        {
-            if(p.getId().equals(id))
-            {
-                return Optional.of(p);
-            }
 
-        }
-        return Optional.empty();
-        // Para que explicar xd
-
+    public Optional<Producto> buscarPorId(Long id) {
+        return productoRepository.findById(id);
     }
-    public Producto crearProducto(Producto producto)
-    {
-        // Asignar un ID único al nuevo producto
-        producto.setId(siguienteId++);
-        // Agregar el producto a la lista de productos
-        productos.add(producto);
-        return producto;
 
-    }    
-    public Optional<Producto> actualizarProducto(Long id, Producto productoActualizado) 
-    {
-        // Buscar el producto por su ID
-        Optional<Producto> productoExistente = buscarPorId(id);
-        if (productoExistente.isEmpty()) 
-        {
+    public Producto crearProducto(Producto producto) {
+        producto.setId(null);
+        return productoRepository.save(producto);
+    }
+
+    public Optional<Producto> actualizarProducto(Long id, Producto datosActualizados) {
+        if (productoRepository.findById(id).isEmpty()) {
             return Optional.empty();
         }
-        Producto producto = productoExistente.get();
-            // Actualizar los campos del producto existente con los valores del producto actualizado
-        producto.setNombre(productoActualizado.getNombre());
-        producto.setDescripcion(productoActualizado.getDescripcion());
-        producto.setPrecio(productoActualizado.getPrecio());
-        producto.setStock(productoActualizado.getStock());
-        producto.setDisponible(productoActualizado.getDisponible());
-        producto.setCategoria(productoActualizado.getCategoria());
-        return Optional.of(producto);
+
+        datosActualizados.setId(id);
+        return Optional.of(productoRepository.save(datosActualizados));
     }
-    public boolean eliminarProducto(Long id) 
-    {
-        // Buscar el producto por su ID
-        Optional<Producto> productoExistente = buscarPorId(id);
-        if (productoExistente.isEmpty()) 
-        {
+
+    public boolean eliminarProducto(Long id) {
+        if (!productoRepository.existsById(id)) {
             return false;
         }
-        // Eliminar el producto de la lista de productos
-        productos.remove(productoExistente.get());
+
+        productoRepository.deleteById(id);
         return true;
     }
-} 
+}
