@@ -1,12 +1,14 @@
 package cl.mateocuetoc.beagibackend.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
 public class Producto {
@@ -29,7 +31,10 @@ public class Producto {
     private Integer stock;
 
     private Boolean disponible;
-    private String categoria;
+
+    @ManyToOne
+    @JoinColumn(name = "categoria_id")
+    private Categoria categoria;
 
     public Producto() {
     }
@@ -41,7 +46,7 @@ public class Producto {
             Integer precio,
             Integer stock,
             Boolean disponible,
-            String categoria) {
+            Categoria categoria) {
 
         this.id = id;
         this.nombre = nombre;
@@ -100,11 +105,11 @@ public class Producto {
         this.disponible = disponible;
     }
 
-    public String getCategoria() {
+    public Categoria getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(String categoria) {
+    public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
     }
 }
