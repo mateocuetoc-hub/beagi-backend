@@ -5,16 +5,24 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import cl.mateocuetoc.beagibackend.exception.CategoriaNoEncontradaException;
+import cl.mateocuetoc.beagibackend.model.Categoria;
 import cl.mateocuetoc.beagibackend.model.Producto;
+import cl.mateocuetoc.beagibackend.repository.CategoriaRepository;
 import cl.mateocuetoc.beagibackend.repository.ProductoRepository;
 
 @Service
 public class ProductoService {
 
     private final ProductoRepository productoRepository;
+    private final CategoriaRepository categoriaRepository;
 
-    public ProductoService(ProductoRepository productoRepository) {
+    public ProductoService(
+            ProductoRepository productoRepository,
+            CategoriaRepository categoriaRepository) {
+
         this.productoRepository = productoRepository;
+        this.categoriaRepository = categoriaRepository;
     }
 
     public List<Producto> listarProductos() {
@@ -26,16 +34,27 @@ public class ProductoService {
     }
 
     public Producto crearProducto(Producto producto) {
+        Categoria categoria = obtenerCategoria(producto);
+
         producto.setId(null);
+        producto.setCategoria(categoria);
+
         return productoRepository.save(producto);
     }
 
-    public Optional<Producto> actualizarProducto(Long id, Producto datosActualizados) {
-        if (productoRepository.findById(id).isEmpty()) {
+    public Optional<Producto> actualizarProducto(
+            Long id,
+            Producto datosActualizados) {
+
+        if (!productoRepository.existsById(id)) {
             return Optional.empty();
         }
 
+        Categoria categoria = obtenerCategoria(datosActualizados);
+
         datosActualizados.setId(id);
+        datosActualizados.setCategoria(categoria);
+
         return Optional.of(productoRepository.save(datosActualizados));
     }
 
@@ -46,5 +65,19 @@ public class ProductoService {
 
         productoRepository.deleteById(id);
         return true;
+    }
+
+    private Categoria obtenerCategoria(Producto producto) {
+        if (producto.getCategoria() == null
+                || producto.getCategoria().getId() == null) {
+
+            throw new CategoriaNoEncontradaException(null);
+        }
+
+        Long categoriaId = producto.getCategoria().getId();
+
+        return categoriaRepository.findById(categoriaId)
+                .orElseThrow(
+                        () -> new CategoriaNoEncontradaException(categoriaId));
     }
 }
