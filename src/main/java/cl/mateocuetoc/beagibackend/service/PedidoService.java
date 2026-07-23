@@ -2,6 +2,7 @@ package cl.mateocuetoc.beagibackend.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,10 @@ public class PedidoService {
 
     public List<Pedido> listarPedidos() {
         return pedidoRepository.findAll();
+    }
+    public Optional<Pedido> buscarPorId(Long id) 
+    {
+        return pedidoRepository.findById(id);
     }
 
     @Transactional

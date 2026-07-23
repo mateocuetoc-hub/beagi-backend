@@ -26,6 +26,13 @@ public class PedidoController {
     public List<Pedido> listarPedidos() {
         return pedidoService.listarPedidos();
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<Pedido> buscarPedidoPorId(@PathVariable Long id) 
+    {
+        return pedidoService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
     @PostMapping
     public ResponseEntity<Pedido> crearPedido(
