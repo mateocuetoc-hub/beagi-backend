@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -101,6 +102,44 @@ class PedidoControllerIntegrationTest {
     }
 
     @Test
+void buscarPedidoPorIdExistenteDevuelve200() throws Exception {
+    Producto producto = crearProducto(
+            "Poleron negro",
+            24990,
+            4);
+
+    mockMvc.perform(post("/api/pedidos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            {
+                              "nombreCliente": "Cliente busqueda",
+                              "telefonoCliente": "+56911112222",
+                              "direccionEntrega": "San Felipe",
+                              "detalles": [
+                                {
+                                  "productoId": %d,
+                                  "cantidad": 1
+                                }
+                              ]
+                            }
+                            """.formatted(producto.getId())))
+            .andExpect(status().isCreated());
+
+    Long pedidoId = pedidoRepository.findAll().get(0).getId();
+
+    mockMvc.perform(get("/api/pedidos/{id}", pedidoId))
+            .andExpect(status().isOk())
+            .andExpect(content()
+                    .contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.id").value(pedidoId))
+            .andExpect(jsonPath("$.nombreCliente")
+                    .value("Cliente busqueda"))
+            .andExpect(jsonPath("$.estado").value("PENDIENTE"))
+            .andExpect(jsonPath("$.total").value(24990));
+}
+
+
+    @Test
     void stockInsuficienteDevuelve400YRevierteTodoElPedido()
             throws Exception {
 
@@ -149,6 +188,12 @@ class PedidoControllerIntegrationTest {
         assertEquals(1, segundoProducto.getStock());
         assertEquals(0, pedidoRepository.count());
     }
+    @Test
+    void buscarPedidoPorIdInexistenteDevuelve404() throws Exception
+    {
+        mockMvc.perform(get("/api/pedidos/{id}", 999999L))
+                .andExpect(status().isNotFound());
+     }
 
     @Test
     void productoInexistenteDevuelve404YNoGuardaPedido()
