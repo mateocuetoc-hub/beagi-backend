@@ -16,6 +16,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 import cl.mateocuetoc.beagibackend.model.Categoria;
 import cl.mateocuetoc.beagibackend.model.Producto;
@@ -187,6 +188,17 @@ class PedidoControllerIntegrationTest {
                 assertEquals(1, segundoProducto.getStock());
                 assertEquals(0, pedidoRepository.count());
         }
+        @Test
+        void actualizarEstadoPedidoInexistenteDevuelve404() throws Exception {
+        mockMvc.perform(patch("/api/pedidos/{id}/estado", 999999L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "estado": "CONFIRMADO"
+                        }
+                        """))
+                .andExpect(status().isNotFound());
+        }
 
         @Test
         void buscarPedidoPorIdInexistenteDevuelve404() throws Exception {
@@ -216,6 +228,63 @@ class PedidoControllerIntegrationTest {
                                 .andExpect(status().isNotFound());
 
                 assertEquals(0, pedidoRepository.count());
+        }
+        @Test
+        void actualizarEstadoPedidoInvalidoDevuelve400() throws Exception {
+        mockMvc.perform(patch("/api/pedidos/{id}/estado", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "estado": "NO_EXISTE"
+                        }
+                        """))
+                .andExpect(status().isBadRequest());
+        }
+        @Test
+        void actualizarEstadoPedidoExistenteDevuelve200() throws Exception {
+        Producto producto = crearProducto(
+                "Polera azul",
+                12990,
+                2);
+
+        mockMvc.perform(post("/api/pedidos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "nombreCliente": "Cliente estado",
+                        "telefonoCliente": "+56911112222",
+                        "direccionEntrega": "San Felipe",
+                        "detalles": [
+                                {
+                                "productoId": %d,
+                                "cantidad": 1
+                                }
+                        ]
+                        }
+                        """.formatted(producto.getId())))
+                .andExpect(status().isCreated());
+
+        Long pedidoId = pedidoRepository.findAll().get(0).getId();
+
+        mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "estado": "CONFIRMADO"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(pedidoId))
+                .andExpect(jsonPath("$.estado").value("CONFIRMADO"));
+
+        assertEquals(
+                "CONFIRMADO",
+                pedidoRepository.findById(pedidoId)
+                        .orElseThrow()
+                        .getEstado()
+                        .name());
         }
 
         private Producto crearProducto(

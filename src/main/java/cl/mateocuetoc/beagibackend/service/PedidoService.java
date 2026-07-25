@@ -39,6 +39,17 @@ public class PedidoService {
     {
         return pedidoRepository.findById(id);
     }
+    @Transactional
+    public Optional<Pedido> actualizarEstado(
+            Long id,
+            EstadoPedido nuevoEstado) {
+
+        return pedidoRepository.findById(id)
+                .map(pedido -> {
+                    pedido.setEstado(nuevoEstado);
+                    return pedidoRepository.save(pedido);
+                });
+    }
 
     @Transactional
     public Pedido crearPedido(CrearPedidoRequest request) {

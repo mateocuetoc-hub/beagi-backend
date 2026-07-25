@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PatchMapping;
+import cl.mateocuetoc.beagibackend.dto.ActualizarEstadoPedidoRequest;
 import cl.mateocuetoc.beagibackend.dto.CrearPedidoRequest;
 import cl.mateocuetoc.beagibackend.model.Pedido;
 import cl.mateocuetoc.beagibackend.service.PedidoService;
@@ -33,6 +35,15 @@ public class PedidoController {
     @GetMapping("/{id}")
     public ResponseEntity<Pedido> buscarPedidoPorId(@PathVariable Long id) {
         return pedidoService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(ResponseEntity.notFound()::build);
+    }
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<Pedido> actualizarEstado(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarEstadoPedidoRequest request) {
+
+        return pedidoService.actualizarEstado(id, request.getEstado())
                 .map(ResponseEntity::ok)
                 .orElseGet(ResponseEntity.notFound()::build);
     }
