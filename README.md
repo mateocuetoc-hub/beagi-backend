@@ -510,7 +510,7 @@ El backend ya cuenta con:
 - Validación de solicitudes.
 - Perfil de pruebas con H2.
 - Pruebas de integración con MockMvc.
-- 17 pruebas automáticas aprobadas.
+- 18 pruebas automáticas aprobadas.
 
 ## Próximos pasos
 
