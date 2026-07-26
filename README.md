@@ -500,6 +500,7 @@ El backend ya cuenta con:
 - Creación y listado de pedidos.
 - Consulta de pedidos por ID.
 - Actualización del estado de pedidos.
+- Filtrado de pedidos por estado.
 - Detalles de pedido.
 - Cálculo de subtotales y total.
 - Descuento automático de stock.
@@ -509,11 +510,10 @@ El backend ya cuenta con:
 - Validación de solicitudes.
 - Perfil de pruebas con H2.
 - Pruebas de integración con MockMvc.
-- 15 pruebas automáticas aprobadas.
+- 17 pruebas automáticas aprobadas.
 
 ## Próximos pasos
 
-- Agregar filtrado de pedidos por estado.
 - Implementar reglas de transición entre estados.
 - Impedir cambios inválidos, como volver un pedido `ENTREGADO` a `PENDIENTE`.
 - Definir las reglas para cancelar pedidos.
