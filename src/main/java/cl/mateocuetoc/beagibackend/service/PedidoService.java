@@ -32,13 +32,18 @@ public class PedidoService {
         this.productoRepository = productoRepository;
     }
 
-    public List<Pedido> listarPedidos() {
-        return pedidoRepository.findAll();
+    public List<Pedido> listarPedidos(EstadoPedido estado) {
+        if (estado == null) {
+            return pedidoRepository.findAll();
+        }
+
+        return pedidoRepository.findByEstado(estado);
     }
-    public Optional<Pedido> buscarPorId(Long id) 
-    {
+
+    public Optional<Pedido> buscarPorId(Long id) {
         return pedidoRepository.findById(id);
     }
+
     @Transactional
     public Optional<Pedido> actualizarEstado(
             Long id,
@@ -87,7 +92,6 @@ public class PedidoService {
             detalle.setSubtotal(subtotal);
 
             pedido.agregarDetalle(detalle);
-
             total += subtotal;
         }
 

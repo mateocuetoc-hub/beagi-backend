@@ -287,6 +287,131 @@ class PedidoControllerIntegrationTest {
                         .name());
         }
 
+        @Test
+        void listarPedidosSinFiltroDevuelveTodosLosPedidos() throws Exception {
+                Producto producto = crearProducto(
+                                "Chaqueta gris",
+                                19990,
+                                5);
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente uno",
+                                                  "telefonoCliente": "+56911111111",
+                                                  "direccionEntrega": "San Felipe",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 1
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente dos",
+                                                  "telefonoCliente": "+56922222222",
+                                                  "direccionEntrega": "Putaendo",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 1
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                mockMvc.perform(get("/api/pedidos"))
+                                .andExpect(status().isOk())
+                                .andExpect(content()
+                                                .contentTypeCompatibleWith(
+                                                                MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.length()").value(2));
+        }
+
+        @Test
+        void filtrarPedidosPorEstadoDevuelveSoloLasCoincidencias()
+                        throws Exception {
+
+                Producto producto = crearProducto(
+                                "Abrigo cafe",
+                                22990,
+                                5);
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente pendiente",
+                                                  "telefonoCliente": "+56933333333",
+                                                  "direccionEntrega": "San Felipe",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 1
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente confirmado",
+                                                  "telefonoCliente": "+56944444444",
+                                                  "direccionEntrega": "San Felipe",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 1
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                Long pedidoConfirmadoId = pedidoRepository.findAll().stream()
+                                .filter(pedido -> pedido.getNombreCliente()
+                                                .equals("Cliente confirmado"))
+                                .findFirst()
+                                .orElseThrow()
+                                .getId();
+
+                mockMvc.perform(patch(
+                                "/api/pedidos/{id}/estado",
+                                pedidoConfirmadoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "CONFIRMADO"
+                                                }
+                                                """))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/pedidos")
+                                .param("estado", "CONFIRMADO"))
+                                .andExpect(status().isOk())
+                                .andExpect(content()
+                                                .contentTypeCompatibleWith(
+                                                                MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].id")
+                                                .value(pedidoConfirmadoId))
+                                .andExpect(jsonPath("$[0].nombreCliente")
+                                                .value("Cliente confirmado"))
+                                .andExpect(jsonPath("$[0].estado")
+                                                .value("CONFIRMADO"));
+        }
+
         private Producto crearProducto(
                         String nombre,
                         Integer precio,
