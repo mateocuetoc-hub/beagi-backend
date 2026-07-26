@@ -411,7 +411,12 @@ class PedidoControllerIntegrationTest {
                                 .andExpect(jsonPath("$[0].estado")
                                                 .value("CONFIRMADO"));
         }
-
+        @Test
+        void filtrarPedidosPorEstadoInvalidoDevuelve400() throws Exception {
+                mockMvc.perform(get("/api/pedidos")
+                                .param("estado", "NO_EXISTE"))
+                                .andExpect(status().isBadRequest());
+        }
         private Producto crearProducto(
                         String nombre,
                         Integer precio,
