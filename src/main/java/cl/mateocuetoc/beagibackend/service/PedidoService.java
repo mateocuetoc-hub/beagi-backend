@@ -59,6 +59,11 @@ public class PedidoService {
                                 estadoActual,
                                 nuevoEstado);
                     }
+                    if(nuevoEstado == EstadoPedido.CANCELADO)
+                    {
+                        devolverStock(pedido);
+
+                    }
 
                     pedido.setEstado(nuevoEstado);
                     return pedidoRepository.save(pedido);
@@ -80,7 +85,17 @@ public class PedidoService {
 
         return false;
     }
+    private void devolverStock(Pedido pedido) {
+        for (DetallePedido detalle : pedido.getDetalles()) 
+        {
+            Producto producto = detalle.getProducto();
 
+            producto.setStock(
+                    producto.getStock() + detalle.getCantidad());
+
+            productoRepository.save(producto);
+        }
+    }
     @Transactional
     public Pedido crearPedido(CrearPedidoRequest request) {
         Pedido pedido = new Pedido();

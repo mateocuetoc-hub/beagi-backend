@@ -583,7 +583,7 @@ class PedidoControllerIntegrationTest {
         }
 
         @Test
-        void cancelarPedidoPendienteFuncionaYCanceladoEsEstadoFinal()
+        void cancelarPedidoPendienteDevuelveStockUnaSolaVezYEsEstadoFinal()
                         throws Exception {
 
                 Producto producto = crearProducto(
@@ -610,6 +610,13 @@ class PedidoControllerIntegrationTest {
 
                 Long pedidoId = pedidoRepository.findAll().get(0).getId();
 
+                // Al crear el pedido, el stock baja de 2 a 1
+                assertEquals(
+                                1,
+                                productoRepository.findById(producto.getId())
+                                                .orElseThrow()
+                                                .getStock());
+
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
@@ -621,6 +628,31 @@ class PedidoControllerIntegrationTest {
                                 .andExpect(jsonPath("$.estado")
                                                 .value("CANCELADO"));
 
+                // Al cancelar, el stock vuelve de 1 a 2
+                assertEquals(
+                                2,
+                                productoRepository.findById(producto.getId())
+                                                .orElseThrow()
+                                                .getStock());
+
+                // Intentar cancelar nuevamente debe fallar
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "CANCELADO"
+                                                }
+                                                """))
+                                .andExpect(status().isConflict());
+
+                // El segundo intento no debe duplicar el stock
+                assertEquals(
+                                2,
+                                productoRepository.findById(producto.getId())
+                                                .orElseThrow()
+                                                .getStock());
+
+                // Un pedido cancelado no puede volver a confirmado
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
@@ -629,6 +661,85 @@ class PedidoControllerIntegrationTest {
                                                 }
                                                 """))
                                 .andExpect(status().isConflict());
+
+                assertEquals(
+                                "CANCELADO",
+                                pedidoRepository.findById(pedidoId)
+                                                .orElseThrow()
+                                                .getEstado()
+                                                .name());
+        }
+
+        @Test
+        void cancelarPedidoConfirmadoDevuelveStock()
+                        throws Exception {
+
+                Producto producto = crearProducto(
+                                "Producto confirmado cancelado",
+                                13990,
+                                3);
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente confirmado cancelado",
+                                                  "telefonoCliente": "+56911112222",
+                                                  "direccionEntrega": "San Felipe",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 2
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                Long pedidoId = pedidoRepository.findAll().get(0).getId();
+
+                // El pedido usa 2 unidades: el stock baja de 3 a 1
+                assertEquals(
+                                1,
+                                productoRepository.findById(producto.getId())
+                                                .orElseThrow()
+                                                .getStock());
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "CONFIRMADO"
+                                                }
+                                                """))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.estado")
+                                                .value("CONFIRMADO"));
+
+                // Confirmar no modifica nuevamente el stock
+                assertEquals(
+                                1,
+                                productoRepository.findById(producto.getId())
+                                                .orElseThrow()
+                                                .getStock());
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "CANCELADO"
+                                                }
+                                                """))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.estado")
+                                                .value("CANCELADO"));
+
+                // Al cancelar se devuelven las 2 unidades
+                assertEquals(
+                                3,
+                                productoRepository.findById(producto.getId())
+                                                .orElseThrow()
+                                                .getStock());
 
                 assertEquals(
                                 "CANCELADO",
@@ -665,6 +776,11 @@ class PedidoControllerIntegrationTest {
                                 .andExpect(status().isCreated());
 
                 Long pedidoId = pedidoRepository.findAll().get(0).getId();
+                assertEquals(
+                        1,
+                        productoRepository.findById(producto.getId())
+                                .orElseThrow()
+                                .getStock());
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
                                 .contentType(MediaType.APPLICATION_JSON)
