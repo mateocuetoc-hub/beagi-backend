@@ -417,6 +417,272 @@ class PedidoControllerIntegrationTest {
                                 .param("estado", "NO_EXISTE"))
                                 .andExpect(status().isBadRequest());
         }
+
+        @Test
+        void pasarPedidoPendienteAEntregadoDevuelve409YConservaEstado()
+                        throws Exception {
+
+                Producto producto = crearProducto(
+                                "Poleron negro",
+                                19990,
+                                2);
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente transicion",
+                                                  "telefonoCliente": "+56955555555",
+                                                  "direccionEntrega": "San Felipe",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 1
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                Long pedidoId = pedidoRepository.findAll().get(0).getId();
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "ENTREGADO"
+                                                }
+                                                """))
+                                .andExpect(status().isConflict());
+
+                assertEquals(
+                                "PENDIENTE",
+                                pedidoRepository.findById(pedidoId)
+                                                .orElseThrow()
+                                                .getEstado()
+                                                .name());
+        }
+
+        @Test
+        void pasarPedidoConfirmadoAEntregadoDevuelve200()
+                        throws Exception {
+
+                Producto producto = crearProducto(
+                                "Zapatillas blancas",
+                                29990,
+                                2);
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente entrega",
+                                                  "telefonoCliente": "+56966666666",
+                                                  "direccionEntrega": "San Felipe",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 1
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                Long pedidoId = pedidoRepository.findAll().get(0).getId();
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "CONFIRMADO"
+                                                }
+                                                """))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "ENTREGADO"
+                                                }
+                                                """))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.estado")
+                                                .value("ENTREGADO"));
+
+                assertEquals(
+                                "ENTREGADO",
+                                pedidoRepository.findById(pedidoId)
+                                                .orElseThrow()
+                                                .getEstado()
+                                                .name());
+        }
+
+        @Test
+        void cambiarPedidoEntregadoDevuelve409YConservaEstado()
+                        throws Exception {
+
+                Producto producto = crearProducto(
+                                "Producto entregado",
+                                15990,
+                                2);
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente final",
+                                                  "telefonoCliente": "+56977777777",
+                                                  "direccionEntrega": "San Felipe",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 1
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                Long pedidoId = pedidoRepository.findAll().get(0).getId();
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "CONFIRMADO"
+                                                }
+                                                """))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "ENTREGADO"
+                                                }
+                                                """))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "CONFIRMADO"
+                                                }
+                                                """))
+                                .andExpect(status().isConflict());
+
+                assertEquals(
+                                "ENTREGADO",
+                                pedidoRepository.findById(pedidoId)
+                                                .orElseThrow()
+                                                .getEstado()
+                                                .name());
+        }
+
+        @Test
+        void cancelarPedidoPendienteFuncionaYCanceladoEsEstadoFinal()
+                        throws Exception {
+
+                Producto producto = crearProducto(
+                                "Producto cancelado",
+                                10990,
+                                2);
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente cancelacion",
+                                                  "telefonoCliente": "+56988888888",
+                                                  "direccionEntrega": "San Felipe",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 1
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                Long pedidoId = pedidoRepository.findAll().get(0).getId();
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "CANCELADO"
+                                                }
+                                                """))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.estado")
+                                                .value("CANCELADO"));
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "CONFIRMADO"
+                                                }
+                                                """))
+                                .andExpect(status().isConflict());
+
+                assertEquals(
+                                "CANCELADO",
+                                pedidoRepository.findById(pedidoId)
+                                                .orElseThrow()
+                                                .getEstado()
+                                                .name());
+        }
+
+        @Test
+        void repetirEstadoPedidoDevuelve409YConservaEstado()
+                        throws Exception {
+
+                Producto producto = crearProducto(
+                                "Producto mismo estado",
+                                9990,
+                                2);
+
+                mockMvc.perform(post("/api/pedidos")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "nombreCliente": "Cliente mismo estado",
+                                                  "telefonoCliente": "+56999999999",
+                                                  "direccionEntrega": "San Felipe",
+                                                  "detalles": [
+                                                    {
+                                                      "productoId": %d,
+                                                      "cantidad": 1
+                                                    }
+                                                  ]
+                                                }
+                                                """.formatted(producto.getId())))
+                                .andExpect(status().isCreated());
+
+                Long pedidoId = pedidoRepository.findAll().get(0).getId();
+
+                mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "estado": "PENDIENTE"
+                                                }
+                                                """))
+                                .andExpect(status().isConflict());
+
+                assertEquals(
+                                "PENDIENTE",
+                                pedidoRepository.findById(pedidoId)
+                                                .orElseThrow()
+                                                .getEstado()
+                                                .name());
+        }
+
         private Producto crearProducto(
                         String nombre,
                         Integer precio,

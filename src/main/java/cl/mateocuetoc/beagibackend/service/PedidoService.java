@@ -17,6 +17,7 @@ import cl.mateocuetoc.beagibackend.model.Pedido;
 import cl.mateocuetoc.beagibackend.model.Producto;
 import cl.mateocuetoc.beagibackend.repository.PedidoRepository;
 import cl.mateocuetoc.beagibackend.repository.ProductoRepository;
+import cl.mateocuetoc.beagibackend.exception.TransicionEstadoPedidoInvalidaException;
 
 @Service
 public class PedidoService {
@@ -51,9 +52,33 @@ public class PedidoService {
 
         return pedidoRepository.findById(id)
                 .map(pedido -> {
+                    EstadoPedido estadoActual = pedido.getEstado();
+
+                    if (!esTransicionValida(estadoActual, nuevoEstado)) {
+                        throw new TransicionEstadoPedidoInvalidaException(
+                                estadoActual,
+                                nuevoEstado);
+                    }
+
                     pedido.setEstado(nuevoEstado);
                     return pedidoRepository.save(pedido);
                 });
+    }
+    private boolean esTransicionValida(
+            EstadoPedido estadoActual,
+            EstadoPedido nuevoEstado) {
+
+        if (estadoActual == EstadoPedido.PENDIENTE) {
+            return nuevoEstado == EstadoPedido.CONFIRMADO
+                    || nuevoEstado == EstadoPedido.CANCELADO;
+        }
+
+        if (estadoActual == EstadoPedido.CONFIRMADO) {
+            return nuevoEstado == EstadoPedido.ENTREGADO
+                    || nuevoEstado == EstadoPedido.CANCELADO;
+        }
+
+        return false;
     }
 
     @Transactional
