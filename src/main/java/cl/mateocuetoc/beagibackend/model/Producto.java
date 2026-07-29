@@ -1,11 +1,17 @@
 package cl.mateocuetoc.beagibackend.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -35,6 +41,13 @@ public class Producto {
     @ManyToOne
     @JoinColumn(name = "categoria_id")
     private Categoria categoria;
+
+    @OneToMany(
+            mappedBy = "producto",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    @OrderBy("orden ASC")
+    private List<ProductoImagen> imagenes = new ArrayList<>();
 
     public Producto() {
     }
@@ -111,5 +124,22 @@ public class Producto {
 
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
+    }
+
+    public List<ProductoImagen> getImagenes() {
+        return imagenes;
+    }
+
+    public void setImagenes(List<ProductoImagen> imagenes) {
+        this.imagenes.clear();
+
+        if (imagenes != null) {
+            imagenes.forEach(this::agregarImagen);
+        }
+    }
+
+    public void agregarImagen(ProductoImagen imagen) {
+        imagen.setProducto(this);
+        this.imagenes.add(imagen);
     }
 }
