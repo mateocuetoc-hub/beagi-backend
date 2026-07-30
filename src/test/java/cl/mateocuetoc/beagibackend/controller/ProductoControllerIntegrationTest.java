@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,6 +61,127 @@ class ProductoControllerIntegrationTest {
         nuevaCategoria.setNombre("Ropa");
 
         categoria = categoriaRepository.save(nuevaCategoria);
+    }
+
+    @Test
+    void crearProductoConCategoriaIdDevuelve201YEvitaInyecciones()
+            throws Exception {
+
+        mockMvc.perform(post("/api/productos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "id": 999999,
+                                  "nombre": "Vestido circular",
+                                  "descripcion": "Producto creado con DTO",
+                                  "talla": "M",
+                                  "estado": "Como nuevo",
+                                  "precio": 18000,
+                                  "stock": 3,
+                                  "disponible": true,
+                                  "nuevo": true,
+                                  "destacado": false,
+                                  "categoriaId": %d,
+                                  "imagenes": [
+                                    {
+                                      "url": "https://sitio-malicioso.cl/imagen.jpg",
+                                      "orden": 0
+                                    }
+                                  ]
+                                }
+                                """.formatted(categoria.getId())))
+                .andExpect(status().isCreated())
+                .andExpect(content()
+                        .contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.nombre").value("Vestido circular"))
+                .andExpect(jsonPath("$.categoria.id")
+                        .value(categoria.getId()))
+                .andExpect(jsonPath("$.imagenes").isEmpty());
+
+        assertEquals(1, productoRepository.count());
+        assertEquals(0, productoImagenRepository.count());
+
+        Producto productoGuardado =
+                productoRepository.findAll().getFirst();
+
+        assertFalse(productoGuardado.getId().equals(999999L));
+    }
+
+    @Test
+    void crearProductoConDatosInvalidosDevuelve400()
+            throws Exception {
+
+        mockMvc.perform(post("/api/productos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "nombre": "",
+                                  "precio": -100,
+                                  "stock": -1,
+                                  "categoriaId": 0
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.nombre")
+                        .value("El nombre es obligatorio"))
+                .andExpect(jsonPath("$.precio")
+                        .value("El precio no puede ser negativo"))
+                .andExpect(jsonPath("$.stock")
+                        .value("El stock no puede ser negativo"))
+                .andExpect(jsonPath("$.disponible")
+                        .value("La disponibilidad es obligatoria"))
+                .andExpect(jsonPath("$.categoriaId")
+                        .value("La categoría debe ser válida"));
+
+        assertEquals(0, productoRepository.count());
+    }
+
+    @Test
+    void actualizarProductoConservaSusImagenes()
+            throws Exception {
+
+        Producto producto = guardarProducto("Chaqueta");
+
+        ProductoImagen imagen = guardarImagen(
+                producto,
+                "https://imagenes.beagi.cl/chaqueta-original.jpg",
+                0);
+
+        mockMvc.perform(put(
+                        "/api/productos/{id}",
+                        producto.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "nombre": "Chaqueta actualizada",
+                                  "descripcion": "Actualizada mediante DTO",
+                                  "talla": "L",
+                                  "estado": "Excelente",
+                                  "precio": 22000,
+                                  "stock": 4,
+                                  "disponible": true,
+                                  "nuevo": false,
+                                  "destacado": true,
+                                  "categoriaId": %d
+                                }
+                                """.formatted(categoria.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(producto.getId()))
+                .andExpect(jsonPath("$.nombre")
+                        .value("Chaqueta actualizada"))
+                .andExpect(jsonPath("$.talla").value("L"))
+                .andExpect(jsonPath("$.destacado").value(true))
+                .andExpect(jsonPath("$.imagenes").isArray())
+                .andExpect(jsonPath("$.imagenes[0].id")
+                        .value(imagen.getId()))
+                .andExpect(jsonPath("$.imagenes[0].url")
+                        .value(
+                                "https://imagenes.beagi.cl/"
+                                        + "chaqueta-original.jpg"));
+
+        assertTrue(
+                productoImagenRepository.existsById(imagen.getId()));
+        assertEquals(1, productoImagenRepository.count());
     }
 
     @Test
