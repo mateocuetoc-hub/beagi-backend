@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import cl.mateocuetoc.beagibackend.dto.CrearProductoImagenRequest;
+import cl.mateocuetoc.beagibackend.dto.ProductoRequest;
 import cl.mateocuetoc.beagibackend.exception.CategoriaNoEncontradaException;
 import cl.mateocuetoc.beagibackend.exception.ProductoImagenNoEncontradaException;
 import cl.mateocuetoc.beagibackend.exception.ProductoNoEncontradoException;
@@ -41,29 +42,29 @@ public class ProductoService {
         return productoRepository.findById(id);
     }
 
-    public Producto crearProducto(Producto producto) {
-        Categoria categoria = obtenerCategoria(producto);
+    public Producto crearProducto(ProductoRequest request) {
+        Categoria categoria =
+                obtenerCategoria(request.getCategoriaId());
 
-        producto.setId(null);
-        producto.setCategoria(categoria);
+        Producto producto = new Producto();
+        copiarDatos(producto, request, categoria);
 
         return productoRepository.save(producto);
     }
 
     public Optional<Producto> actualizarProducto(
             Long id,
-            Producto datosActualizados) {
+            ProductoRequest request) {
 
-        if (!productoRepository.existsById(id)) {
-            return Optional.empty();
-        }
+        return productoRepository.findById(id)
+                .map(producto -> {
+                    Categoria categoria =
+                            obtenerCategoria(request.getCategoriaId());
 
-        Categoria categoria = obtenerCategoria(datosActualizados);
+                    copiarDatos(producto, request, categoria);
 
-        datosActualizados.setId(id);
-        datosActualizados.setCategoria(categoria);
-
-        return Optional.of(productoRepository.save(datosActualizados));
+                    return productoRepository.save(producto);
+                });
     }
 
     public boolean eliminarProducto(Long id) {
@@ -117,17 +118,30 @@ public class ProductoService {
         }
     }
 
-    private Categoria obtenerCategoria(Producto producto) {
-        if (producto.getCategoria() == null
-                || producto.getCategoria().getId() == null) {
-
+    private Categoria obtenerCategoria(Long categoriaId) {
+        if (categoriaId == null) {
             throw new CategoriaNoEncontradaException(null);
         }
-
-        Long categoriaId = producto.getCategoria().getId();
 
         return categoriaRepository.findById(categoriaId)
                 .orElseThrow(
                         () -> new CategoriaNoEncontradaException(categoriaId));
+    }
+
+    private void copiarDatos(
+            Producto producto,
+            ProductoRequest request,
+            Categoria categoria) {
+
+        producto.setNombre(request.getNombre());
+        producto.setDescripcion(request.getDescripcion());
+        producto.setTalla(request.getTalla());
+        producto.setEstado(request.getEstado());
+        producto.setPrecio(request.getPrecio());
+        producto.setStock(request.getStock());
+        producto.setDisponible(request.getDisponible());
+        producto.setNuevo(request.isNuevo());
+        producto.setDestacado(request.isDestacado());
+        producto.setCategoria(categoria);
     }
 }

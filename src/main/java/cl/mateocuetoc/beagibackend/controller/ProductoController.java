@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.mateocuetoc.beagibackend.dto.CrearProductoImagenRequest;
+import cl.mateocuetoc.beagibackend.dto.ProductoRequest;
 import cl.mateocuetoc.beagibackend.model.Producto;
 import cl.mateocuetoc.beagibackend.model.ProductoImagen;
 import cl.mateocuetoc.beagibackend.service.ProductoService;
@@ -51,10 +52,10 @@ public class ProductoController {
 
     @PostMapping
     public ResponseEntity<Producto> crearProducto(
-            @Valid @RequestBody Producto producto) {
+            @Valid @RequestBody ProductoRequest request) {
 
         Producto nuevoProducto =
-                productoService.crearProducto(producto);
+                productoService.crearProducto(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -64,12 +65,10 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<Producto> actualizarProducto(
             @PathVariable Long id,
-            @Valid @RequestBody Producto datosActualizados) {
+            @Valid @RequestBody ProductoRequest request) {
 
         Optional<Producto> productoActualizado =
-                productoService.actualizarProducto(
-                        id,
-                        datosActualizados);
+                productoService.actualizarProducto(id, request);
 
         if (productoActualizado.isEmpty()) {
             return ResponseEntity.notFound().build();
