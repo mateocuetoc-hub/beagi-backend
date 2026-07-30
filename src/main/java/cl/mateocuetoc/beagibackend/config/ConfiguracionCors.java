@@ -14,7 +14,9 @@ public class ConfiguracionCors implements WebMvcConfigurer {
                         "http://localhost:*",
                         "http://127.0.0.1:*",
                         "https://mateocuetoc-hub.github.io")
-                .allowedMethods("GET")
+                .allowedMethods("GET", "HEAD", "OPTIONS")
                 .allowedHeaders("*");
     }
 }
+
+
