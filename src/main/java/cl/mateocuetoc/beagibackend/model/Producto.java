@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -27,6 +28,18 @@ public class Producto {
     private String nombre;
 
     private String descripcion;
+
+    @Column(length = 50)
+    private String talla;
+
+    @Column(length = 100)
+    private String estado;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean nuevo = false;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean destacado = false;
 
     @NotNull(message = "El precio es obligatorio")
     @PositiveOrZero(message = "El precio no puede ser negativo")
@@ -92,6 +105,38 @@ public class Producto {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public String getTalla() {
+        return talla;
+    }
+
+    public void setTalla(String talla) {
+        this.talla = talla;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public boolean isNuevo() {
+        return nuevo;
+    }
+
+    public void setNuevo(boolean nuevo) {
+        this.nuevo = nuevo;
+    }
+
+    public boolean isDestacado() {
+        return destacado;
+    }
+
+    public void setDestacado(boolean destacado) {
+        this.destacado = destacado;
     }
 
     public Integer getPrecio() {
