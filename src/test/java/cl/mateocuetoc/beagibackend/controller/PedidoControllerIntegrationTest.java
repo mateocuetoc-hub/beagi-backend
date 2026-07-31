@@ -1,6 +1,7 @@
 package cl.mateocuetoc.beagibackend.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,6 +30,9 @@ import cl.mateocuetoc.beagibackend.repository.ProductoRepository;
 @ActiveProfiles("test")
 class PedidoControllerIntegrationTest {
 
+        private static final String ADMIN_USERNAME = "admin-test";
+        private static final String ADMIN_PASSWORD = "ClaveTest123!";
+
         @Autowired
         private MockMvc mockMvc;
 
@@ -55,6 +59,14 @@ class PedidoControllerIntegrationTest {
                 pedidoRepository.deleteAll();
                 productoRepository.deleteAll();
                 categoriaRepository.deleteAll();
+        }
+
+        @Test
+        void listarPedidosSinAutenticacionDevuelve401()
+                        throws Exception {
+
+                mockMvc.perform(get("/api/pedidos"))
+                                .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -128,7 +140,8 @@ class PedidoControllerIntegrationTest {
 
                 Long pedidoId = pedidoRepository.findAll().get(0).getId();
 
-                mockMvc.perform(get("/api/pedidos/{id}", pedidoId))
+                mockMvc.perform(get("/api/pedidos/{id}", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                                 .andExpect(status().isOk())
                                 .andExpect(content()
                                                 .contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -191,6 +204,7 @@ class PedidoControllerIntegrationTest {
         @Test
         void actualizarEstadoPedidoInexistenteDevuelve404() throws Exception {
         mockMvc.perform(patch("/api/pedidos/{id}/estado", 999999L)
+                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
@@ -202,7 +216,8 @@ class PedidoControllerIntegrationTest {
 
         @Test
         void buscarPedidoPorIdInexistenteDevuelve404() throws Exception {
-                mockMvc.perform(get("/api/pedidos/{id}", 999999L))
+                mockMvc.perform(get("/api/pedidos/{id}", 999999L)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                                 .andExpect(status().isNotFound());
         }
 
@@ -232,6 +247,7 @@ class PedidoControllerIntegrationTest {
         @Test
         void actualizarEstadoPedidoInvalidoDevuelve400() throws Exception {
         mockMvc.perform(patch("/api/pedidos/{id}/estado", 1L)
+                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
@@ -267,6 +283,7 @@ class PedidoControllerIntegrationTest {
         Long pedidoId = pedidoRepository.findAll().get(0).getId();
 
         mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
@@ -328,7 +345,8 @@ class PedidoControllerIntegrationTest {
                                                 """.formatted(producto.getId())))
                                 .andExpect(status().isCreated());
 
-                mockMvc.perform(get("/api/pedidos"))
+                mockMvc.perform(get("/api/pedidos")
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                                 .andExpect(status().isOk())
                                 .andExpect(content()
                                                 .contentTypeCompatibleWith(
@@ -389,6 +407,7 @@ class PedidoControllerIntegrationTest {
                 mockMvc.perform(patch(
                                 "/api/pedidos/{id}/estado",
                                 pedidoConfirmadoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -398,6 +417,7 @@ class PedidoControllerIntegrationTest {
                                 .andExpect(status().isOk());
 
                 mockMvc.perform(get("/api/pedidos")
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .param("estado", "CONFIRMADO"))
                                 .andExpect(status().isOk())
                                 .andExpect(content()
@@ -414,6 +434,7 @@ class PedidoControllerIntegrationTest {
         @Test
         void filtrarPedidosPorEstadoInvalidoDevuelve400() throws Exception {
                 mockMvc.perform(get("/api/pedidos")
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .param("estado", "NO_EXISTE"))
                                 .andExpect(status().isBadRequest());
         }
@@ -447,6 +468,7 @@ class PedidoControllerIntegrationTest {
                 Long pedidoId = pedidoRepository.findAll().get(0).getId();
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -492,6 +514,7 @@ class PedidoControllerIntegrationTest {
                 Long pedidoId = pedidoRepository.findAll().get(0).getId();
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -501,6 +524,7 @@ class PedidoControllerIntegrationTest {
                                 .andExpect(status().isOk());
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -548,6 +572,7 @@ class PedidoControllerIntegrationTest {
                 Long pedidoId = pedidoRepository.findAll().get(0).getId();
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -557,6 +582,7 @@ class PedidoControllerIntegrationTest {
                                 .andExpect(status().isOk());
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -566,6 +592,7 @@ class PedidoControllerIntegrationTest {
                                 .andExpect(status().isOk());
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -618,6 +645,7 @@ class PedidoControllerIntegrationTest {
                                                 .getStock());
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -637,6 +665,7 @@ class PedidoControllerIntegrationTest {
 
                 // Intentar cancelar nuevamente debe fallar
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -654,6 +683,7 @@ class PedidoControllerIntegrationTest {
 
                 // Un pedido cancelado no puede volver a confirmado
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -706,6 +736,7 @@ class PedidoControllerIntegrationTest {
                                                 .getStock());
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -724,6 +755,7 @@ class PedidoControllerIntegrationTest {
                                                 .getStock());
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
@@ -783,6 +815,7 @@ class PedidoControllerIntegrationTest {
                                 .getStock());
 
                 mockMvc.perform(patch("/api/pedidos/{id}/estado", pedidoId)
+                                .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                                 {
