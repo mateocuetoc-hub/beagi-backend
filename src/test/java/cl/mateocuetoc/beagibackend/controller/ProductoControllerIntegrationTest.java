@@ -3,6 +3,7 @@ package cl.mateocuetoc.beagibackend.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,6 +33,9 @@ import cl.mateocuetoc.beagibackend.repository.ProductoRepository;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class ProductoControllerIntegrationTest {
+
+    private static final String ADMIN_USERNAME = "admin-test";
+    private static final String ADMIN_PASSWORD = "ClaveTest123!";
 
     @Autowired
     private MockMvc mockMvc;
@@ -64,10 +68,23 @@ class ProductoControllerIntegrationTest {
     }
 
     @Test
+    void crearProductoSinAutenticacionDevuelve401YNoGuardaDatos()
+            throws Exception {
+
+        mockMvc.perform(post("/api/productos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnauthorized());
+
+        assertEquals(0, productoRepository.count());
+    }
+
+    @Test
     void crearProductoConCategoriaIdDevuelve201YEvitaInyecciones()
             throws Exception {
 
         mockMvc.perform(post("/api/productos")
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -112,6 +129,7 @@ class ProductoControllerIntegrationTest {
             throws Exception {
 
         mockMvc.perform(post("/api/productos")
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -150,6 +168,7 @@ class ProductoControllerIntegrationTest {
         mockMvc.perform(put(
                         "/api/productos/{id}",
                         producto.getId())
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -191,6 +210,7 @@ class ProductoControllerIntegrationTest {
         mockMvc.perform(post(
                         "/api/productos/{productoId}/imagenes",
                         producto.getId())
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -217,6 +237,7 @@ class ProductoControllerIntegrationTest {
         mockMvc.perform(post(
                         "/api/productos/{productoId}/imagenes",
                         producto.getId())
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -277,7 +298,8 @@ class ProductoControllerIntegrationTest {
         mockMvc.perform(delete(
                         "/api/productos/{productoId}/imagenes/{imagenId}",
                         producto.getId(),
-                        imagen.getId()))
+                        imagen.getId())
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                 .andExpect(status().isNoContent());
 
         assertFalse(productoImagenRepository.existsById(imagen.getId()));
@@ -296,7 +318,8 @@ class ProductoControllerIntegrationTest {
         mockMvc.perform(delete(
                         "/api/productos/{productoId}/imagenes/{imagenId}",
                         segundoProducto.getId(),
-                        imagen.getId()))
+                        imagen.getId())
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                 .andExpect(status().isNotFound());
 
         assertTrue(productoImagenRepository.existsById(imagen.getId()));
@@ -309,7 +332,8 @@ class ProductoControllerIntegrationTest {
         mockMvc.perform(delete(
                         "/api/productos/{productoId}/imagenes/{imagenId}",
                         producto.getId(),
-                        999999L))
+                        999999L)
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                 .andExpect(status().isNotFound());
     }
 

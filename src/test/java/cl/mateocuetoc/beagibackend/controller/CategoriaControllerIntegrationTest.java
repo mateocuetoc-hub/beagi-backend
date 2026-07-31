@@ -2,6 +2,7 @@ package cl.mateocuetoc.beagibackend.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,6 +28,9 @@ import cl.mateocuetoc.beagibackend.repository.CategoriaRepository;
 @ActiveProfiles("test")
 class CategoriaControllerIntegrationTest {
 
+    private static final String ADMIN_USERNAME = "admin-test";
+    private static final String ADMIN_PASSWORD = "ClaveTest123!";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -39,8 +43,21 @@ class CategoriaControllerIntegrationTest {
     }
 
     @Test
+    void crearCategoriaSinAutenticacionDevuelve401YNoGuardaDatos()
+            throws Exception {
+
+        mockMvc.perform(post("/api/categorias")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnauthorized());
+
+        assertEquals(0, categoriaRepository.count());
+    }
+
+    @Test
     void crearCategoriaDevuelve201YGuardaLosDatos() throws Exception {
         mockMvc.perform(post("/api/categorias")
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -106,6 +123,7 @@ class CategoriaControllerIntegrationTest {
         mockMvc.perform(put(
                         "/api/categorias/{id}",
                         categoriaGuardada.getId())
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -136,7 +154,8 @@ class CategoriaControllerIntegrationTest {
 
         mockMvc.perform(delete(
                         "/api/categorias/{id}",
-                        categoriaGuardada.getId()))
+                        categoriaGuardada.getId())
+                        .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                 .andExpect(status().isNoContent());
 
         assertFalse(categoriaRepository.existsById(categoriaGuardada.getId()));

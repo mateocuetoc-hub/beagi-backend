@@ -11,10 +11,10 @@ public class ConfiguracionCors implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOriginPatterns(
-                        "http://localhost:*",
-                        "http://127.0.0.1:*",
+                        "http://localhost:[*]",
+                        "http://127.0.0.1:[*]",
                         "https://mateocuetoc-hub.github.io")
-                .allowedMethods("GET", "HEAD", "OPTIONS")
+                .allowedMethods("GET", "HEAD", "OPTIONS","POST", "PUT", "PATCH", "DELETE")
                 .allowedHeaders("*");
     }
 }
