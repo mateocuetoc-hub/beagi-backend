@@ -73,8 +73,8 @@ public class ProductoImagenArchivoController {
         }
 
         int siguienteOrden = imagenesExistentes.stream()
-                .map(ProductoImagen::getOrden)
-                .max(Integer::compareTo)
+                .mapToInt(imagen -> imagen.getOrden())
+                .max()
                 .orElse(-1) + 1;
 
         List<ProductoImagen> imagenesGuardadas =
