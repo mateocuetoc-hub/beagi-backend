@@ -1,159 +1,270 @@
-# BeaGi Backend
+<h1 align="center">BeaGi Backend</h1>
 
-API REST desarrollada para **BeaGi Moda Circular**, una tienda de ropa femenina enfocada inicialmente en la venta de abrigos y chaquetas.
+<p align="center">
+  API REST para administrar el catálogo, las imágenes, el stock y los pedidos de BeaGi ModaCircular.
+</p>
 
-El proyecto permite administrar categorías, productos, stock y pedidos mediante una arquitectura por capas construida con Java, Spring Boot y PostgreSQL.
+<p align="center">
+  <a href="https://beagi-backend.onrender.com/api/productos"><strong>Ver API</strong></a>
+  ·
+  <a href="https://mateocuetoc-hub.github.io/BeaGi-ModaCircular/"><strong>Ver tienda</strong></a>
+  ·
+  <a href="https://github.com/mateocuetoc-hub/BeaGi-ModaCircular"><strong>Repositorio frontend</strong></a>
+</p>
 
-## Objetivos del proyecto
+<p align="center">
+  <img src="https://img.shields.io/badge/Java_21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21">
+  <img src="https://img.shields.io/badge/Spring_Boot_4.1-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot 4.1">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white" alt="Cloudinary">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+</p>
 
-Este backend fue creado para:
+## Sobre el proyecto
 
-- Administrar categorías de productos.
-- Administrar productos, precios y disponibilidad.
-- Persistir la información en PostgreSQL.
-- Crear pedidos con uno o más productos.
-- Guardar información del cliente.
-- Calcular subtotales y totales en el servidor.
-- Descontar automáticamente el stock.
-- Evitar pedidos con productos inexistentes.
-- Evitar pedidos con stock insuficiente.
-- Revertir completamente una operación cuando ocurre un error.
-- Consultar pedidos y modificar su estado.
-- Servir como backend para el frontend de BeaGi Moda Circular.
-- Aplicar buenas prácticas de desarrollo backend y control de versiones.
+**BeaGi Backend** es la API de una plataforma full stack creada para una pyme de moda circular de San Felipe, Chile. Centraliza la información que utiliza la tienda pública y permite administrar productos, categorías, fotografías, stock y pedidos desde un panel protegido.
 
-## Tecnologías utilizadas
+El proyecto comenzó como un CRUD de productos y evolucionó hasta incorporar persistencia real, reglas de negocio transaccionales, autenticación administrativa, almacenamiento de imágenes y despliegue en producción.
 
-- Java 21
-- Spring Boot 4.1
-- Spring Web MVC
-- Spring Data JPA
-- Hibernate
-- Jakarta Validation
-- PostgreSQL
-- H2 Database para pruebas
-- JUnit 5
-- MockMvc
-- Maven Wrapper
-- Git y GitHub
+La solución completa utiliza:
 
-## Funcionalidades actuales
+- **GitHub Pages** para el frontend.
+- **Render** para ejecutar la API.
+- **Neon PostgreSQL** para persistir la información.
+- **Cloudinary** para almacenar las fotografías de los productos.
 
-### Categorías
+## Funcionalidades
 
-- Crear categorías.
-- Listar categorías.
-- Buscar una categoría por ID.
-- Actualizar categorías.
-- Eliminar categorías.
-- Responder con `404 Not Found` cuando una categoría no existe.
-- Validar los datos recibidos.
+### Productos y categorías
 
-### Productos
+- CRUD completo de productos y categorías.
+- Asociación de cada producto con una categoría.
+- Validación de nombre, precio, stock, disponibilidad y categoría.
+- Atributos comerciales como talla, estado, novedad y producto destacado.
+- Respuestas `404 Not Found` para recursos inexistentes.
+- Eliminación en cascada de las imágenes asociadas a un producto.
 
-- Crear productos.
-- Listar productos.
-- Buscar un producto por ID.
-- Actualizar productos.
-- Eliminar productos.
-- Asociar productos con categorías.
-- Validar nombre, precio, stock y disponibilidad.
-- Responder con `404 Not Found` cuando un producto no existe.
+### Imágenes de productos
 
-### Pedidos
+- Asociación de varias imágenes ordenadas a un mismo producto.
+- Carga directa de archivos mediante `multipart/form-data`.
+- Almacenamiento externo en Cloudinary mediante URL segura.
+- Máximo de cinco imágenes por producto.
+- Formatos permitidos: JPG, PNG y WebP.
+- Tamaño máximo de 8 MB por archivo y 40 MB por solicitud.
+- Validación previa antes de almacenar una imagen.
 
-- Crear pedidos con uno o más productos.
-- Listar todos los pedidos.
-- Buscar un pedido por ID.
-- Guardar información del cliente.
-- Calcular el subtotal de cada producto.
-- Calcular el total completo del pedido.
-- Guardar el precio unitario existente al momento de la compra.
-- Descontar automáticamente el stock.
-- Rechazar productos inexistentes.
-- Rechazar cantidades superiores al stock disponible.
-- Revertir todos los cambios si cualquier detalle del pedido falla.
-- Asignar automáticamente el estado inicial `PENDIENTE`.
-- Actualizar el estado de un pedido.
-- Permitir los estados `PENDIENTE`, `CONFIRMADO`, `ENTREGADO` y `CANCELADO`.
-- Responder con `404 Not Found` cuando un pedido no existe.
-- Responder con `400 Bad Request` cuando el estado recibido no es válido.
+### Pedidos y stock
+
+- Creación de pedidos con uno o más productos.
+- Registro de datos del cliente y observaciones.
+- Cálculo de subtotales y total exclusivamente en el servidor.
+- Conservación del precio unitario utilizado al crear el pedido.
+- Descuento automático de stock.
+- Rechazo de productos inexistentes o cantidades sin stock suficiente.
+- Rollback transaccional si falla cualquier detalle del pedido.
+- Consulta de pedidos y filtro opcional por estado.
+- Flujo controlado de estados: `PENDIENTE`, `CONFIRMADO`, `ENTREGADO` y `CANCELADO`.
+- Reposición automática del stock al cancelar un pedido pendiente o confirmado.
+- Bloqueo de transiciones inválidas mediante `409 Conflict`.
+
+### Seguridad
+
+- Autenticación HTTP Basic para las operaciones administrativas.
+- API sin sesiones mediante una política `STATELESS`.
+- Credenciales obtenidas desde variables de entorno.
+- Endpoints públicos limitados a la lectura del catálogo y creación de pedidos.
+- CORS configurado para GitHub Pages y entornos de desarrollo locales.
+- Trazas y excepciones internas ocultas en las respuestas de producción.
+
+> [!IMPORTANT]
+> Las credenciales de administración, PostgreSQL y Cloudinary no se almacenan en el repositorio. Deben configurarse mediante variables de entorno.
 
 ## Arquitectura
 
-El proyecto utiliza una arquitectura por capas:
+```mermaid
+flowchart TD
+    F[Frontend en GitHub Pages] --> A[API Spring Boot en Render]
+    A --> P[(PostgreSQL en Neon)]
+    A --> C[Imágenes en Cloudinary]
+    T[Pruebas de integración] --> H[(H2 en memoria)]
+    T --> A
+```
+
+La aplicación sigue una arquitectura por capas: los controladores reciben las solicitudes, los servicios ejecutan la lógica de negocio y los repositorios administran la persistencia. La integración con Cloudinary se encapsula en un servicio especializado.
+
+| Capa | Responsabilidad |
+| --- | --- |
+| Controller | Recibir solicitudes HTTP y construir las respuestas de la API |
+| DTO | Definir y validar los datos de entrada |
+| Service | Ejecutar reglas de negocio y operaciones transaccionales |
+| Repository | Acceder a los datos mediante Spring Data JPA |
+| Model | Representar las entidades y sus relaciones |
+| Exception | Traducir errores de validación y negocio a respuestas HTTP |
+| Config | Configurar seguridad, CORS, Cloudinary y componentes de Spring |
+
+## Modelo de datos
+
+```mermaid
+erDiagram
+    CATEGORIA ||--o{ PRODUCTO : agrupa
+    PRODUCTO ||--o{ PRODUCTO_IMAGEN : contiene
+    PEDIDO ||--|{ DETALLE_PEDIDO : incluye
+    PRODUCTO ||--o{ DETALLE_PEDIDO : referencia
+
+    CATEGORIA {
+        long id PK
+        string nombre
+    }
+    PRODUCTO {
+        long id PK
+        string nombre
+        int precio
+        int stock
+        boolean disponible
+        long categoria_id FK
+    }
+    PRODUCTO_IMAGEN {
+        long id PK
+        string url
+        int orden
+        long producto_id FK
+    }
+    PEDIDO {
+        long id PK
+        string estado
+        int total
+        datetime fecha_creacion
+    }
+    DETALLE_PEDIDO {
+        long id PK
+        int cantidad
+        int precio_unitario
+        int subtotal
+    }
+```
+
+## Tecnologías
+
+| Área | Tecnologías |
+| --- | --- |
+| Lenguaje y framework | Java 21, Spring Boot 4.1 |
+| API | Spring Web MVC, REST y JSON |
+| Persistencia | Spring Data JPA, Hibernate y PostgreSQL |
+| Validación | Jakarta Validation y DTOs |
+| Seguridad | Spring Security y HTTP Basic |
+| Imágenes | Cloudinary y carga multipart |
+| Pruebas | JUnit 5, MockMvc, Mockito y H2 |
+| Construcción | Maven Wrapper |
+| Despliegue | Docker, Render y Neon PostgreSQL |
+| Control de versiones | Git y GitHub |
+
+## Estructura principal
 
 ```text
-src/main/java/cl/mateocuetoc/beagibackend/
-├── controller/
-├── dto/
-├── exception/
-├── model/
-├── repository/
-├── service/
-└── BeagiBackendApplication.java
+beagi-backend/
+├── .mvn/                           # Maven Wrapper
+├── src/
+│   ├── main/
+│   │   ├── java/cl/mateocuetoc/beagibackend/
+│   │   │   ├── config/             # Seguridad, CORS y Cloudinary
+│   │   │   ├── controller/         # Endpoints REST
+│   │   │   ├── dto/                # Solicitudes y validaciones
+│   │   │   ├── exception/          # Errores de negocio y manejadores
+│   │   │   ├── model/              # Entidades JPA
+│   │   │   ├── repository/         # Acceso a datos
+│   │   │   ├── service/            # Lógica de negocio
+│   │   │   └── BeagiBackendApplication.java
+│   │   └── resources/
+│   │       └── application.properties
+│   └── test/
+│       ├── java/                    # Pruebas unitarias y de integración
+│       └── resources/
+│           └── application-test.properties
+├── Dockerfile
+├── mvnw
+├── mvnw.cmd
+├── pom.xml
+└── README.md
 ```
 
-### Controller
+## Endpoints
 
-Recibe las solicitudes HTTP, utiliza los servicios correspondientes y devuelve las respuestas de la API.
+### Categorías
 
-### Service
+| Método | Endpoint | Acceso | Descripción |
+| --- | --- | --- | --- |
+| `GET` | `/api/categorias` | Público | Listar categorías |
+| `GET` | `/api/categorias/{id}` | Público | Buscar una categoría |
+| `POST` | `/api/categorias` | Admin | Crear una categoría |
+| `PUT` | `/api/categorias/{id}` | Admin | Actualizar una categoría |
+| `DELETE` | `/api/categorias/{id}` | Admin | Eliminar una categoría |
 
-Contiene la lógica de negocio, como la creación de pedidos, el cálculo de totales, el control de stock y la actualización de estados.
+### Productos
 
-### Repository
+| Método | Endpoint | Acceso | Descripción |
+| --- | --- | --- | --- |
+| `GET` | `/api/productos` | Público | Listar productos |
+| `GET` | `/api/productos/{id}` | Público | Buscar un producto |
+| `POST` | `/api/productos` | Admin | Crear un producto |
+| `PUT` | `/api/productos/{id}` | Admin | Actualizar un producto |
+| `DELETE` | `/api/productos/{id}` | Admin | Eliminar un producto |
 
-Permite consultar, guardar, actualizar y eliminar información utilizando Spring Data JPA.
+### Imágenes
 
-### Model
+| Método | Endpoint | Acceso | Descripción |
+| --- | --- | --- | --- |
+| `GET` | `/api/productos/{productoId}/imagenes` | Público | Listar imágenes ordenadas |
+| `POST` | `/api/productos/{productoId}/imagenes` | Admin | Asociar una URL de imagen |
+| `POST` | `/api/productos/{productoId}/imagenes/archivos` | Admin | Subir archivos a Cloudinary |
+| `DELETE` | `/api/productos/{productoId}/imagenes/{imagenId}` | Admin | Eliminar una imagen asociada |
 
-Contiene las entidades que representan las tablas y relaciones de la base de datos.
+### Pedidos
 
-### DTO
+| Método | Endpoint | Acceso | Descripción |
+| --- | --- | --- | --- |
+| `POST` | `/api/pedidos` | Público | Crear un pedido |
+| `GET` | `/api/pedidos` | Admin | Listar o filtrar pedidos |
+| `GET` | `/api/pedidos/{id}` | Admin | Buscar un pedido |
+| `PATCH` | `/api/pedidos/{id}/estado` | Admin | Actualizar el estado |
 
-Define los datos que la API recibe en determinadas solicitudes, evitando recibir información innecesaria directamente desde el cliente.
+El listado administrativo permite filtrar mediante:
 
-### Exception
+```http
+GET /api/pedidos?estado=CONFIRMADO
+```
 
-Contiene excepciones específicas para representar errores de negocio, como productos inexistentes o stock insuficiente.
+## Estados de un pedido
 
-## Requisitos
+```mermaid
+stateDiagram-v2
+    [*] --> PENDIENTE
+    PENDIENTE --> CONFIRMADO
+    PENDIENTE --> CANCELADO
+    CONFIRMADO --> ENTREGADO
+    CONFIRMADO --> CANCELADO
+    ENTREGADO --> [*]
+    CANCELADO --> [*]
+```
 
-Para ejecutar el proyecto se necesita:
+- `PENDIENTE` y `CONFIRMADO` se pueden cancelar.
+- Una cancelación devuelve al inventario las unidades del pedido.
+- `ENTREGADO` y `CANCELADO` son estados finales.
+- Repetir un estado o intentar una transición no permitida devuelve `409 Conflict`.
 
-- Java 21
-- PostgreSQL
-- Git
-- Una terminal
-- Visual Studio Code u otro editor compatible
+## Ejecutar localmente
 
-No es necesario instalar Maven globalmente porque el proyecto utiliza Maven Wrapper.
-
-## Clonar el repositorio
+### 1. Clonar el repositorio
 
 ```bash
-mkdir -p ~/Proyectos
-cd ~/Proyectos
-
 git clone https://github.com/mateocuetoc-hub/beagi-backend.git
 cd beagi-backend
-
 chmod +x mvnw
-code .
 ```
 
-Si el proyecto ya está descargado:
+### 2. Preparar PostgreSQL
 
-```bash
-cd ~/Proyectos/beagi-backend
-git pull --ff-only origin main
-code .
-```
-
-## Configuración de PostgreSQL
-
-La aplicación utiliza la siguiente configuración local:
+Crea una base de datos y un usuario local. La configuración predeterminada espera:
 
 ```text
 Base de datos: beagi_db
@@ -161,178 +272,83 @@ Usuario: beagi_user
 Puerto: 5432
 ```
 
-La contraseña no se guarda dentro del repositorio.
-
-El archivo `application.properties` utiliza una variable de entorno:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/beagi_db
-spring.datasource.username=beagi_user
-spring.datasource.password=${DB_PASSWORD}
-```
-
-Para cargar la contraseña de manera segura:
+### 3. Configurar variables de entorno
 
 ```bash
-unset DB_PASSWORD
-read -s -p "Contraseña de beagi_user: " DB_PASSWORD
-echo
-export DB_PASSWORD
+export BEAGI_DB_URL='jdbc:postgresql://localhost:5432/beagi_db'
+export BEAGI_DB_USERNAME='beagi_user'
+export BEAGI_DB_PASSWORD='TU_CONTRASENA_LOCAL'
+
+export BEAGI_ADMIN_USERNAME='TU_USUARIO_ADMIN'
+export BEAGI_ADMIN_PASSWORD='TU_CONTRASENA_ADMIN'
+
+export CLOUDINARY_CLOUD_NAME='TU_CLOUD_NAME'
+export CLOUDINARY_API_KEY='TU_API_KEY'
+export CLOUDINARY_API_SECRET='TU_API_SECRET'
 ```
 
-Para confirmar que la variable fue cargada sin mostrar su contenido:
+Cloudinary es necesario para probar la carga real de archivos. El resto de los endpoints puede desarrollarse con las variables correspondientes a PostgreSQL y administración.
+
+### 4. Iniciar la aplicación
 
 ```bash
-printf 'Variable cargada: %s caracteres\n' "${#DB_PASSWORD}"
-```
-
-Para probar la conexión con PostgreSQL:
-
-```bash
-PGPASSWORD="$DB_PASSWORD" psql \
-  -h localhost \
-  -U beagi_user \
-  -d beagi_db \
-  -c '\conninfo'
-```
-
-## Ejecutar la aplicación
-
-Desde la raíz del proyecto:
-
-```bash
-cd ~/Proyectos/beagi-backend
 ./mvnw spring-boot:run
 ```
 
-La API queda disponible en:
+La API quedará disponible en:
 
 ```text
-http://localhost:8080
+http://localhost:8080/api
 ```
 
-Para detener la aplicación:
+## Pruebas automatizadas
 
-```text
-Ctrl + C
-```
-
-## Ejecutar las pruebas
-
-Las pruebas utilizan H2 en memoria. Por lo tanto, no modifican los datos de PostgreSQL y no requieren la variable `DB_PASSWORD`.
-
-Para ejecutar todas las pruebas:
+Las pruebas utilizan el perfil `test` y una base H2 en memoria. No se conectan a PostgreSQL ni modifican los datos de producción.
 
 ```bash
-cd ~/Proyectos/beagi-backend
 ./mvnw test
 ```
 
-Estado actual:
+Estado verificado:
 
 ```text
-Tests run: 15
+Tests run: 41
 Failures: 0
 Errors: 0
 Skipped: 0
 BUILD SUCCESS
 ```
 
-Las pruebas cubren:
+La cobertura funcional incluye:
 
-- Carga del contexto de Spring.
-- CRUD de categorías.
-- Validación de categorías.
-- Creación de pedidos.
-- Cálculo de subtotales y totales.
-- Descuento automático de stock.
-- Rechazo por stock insuficiente.
-- Rollback transaccional.
-- Rechazo de productos inexistentes.
-- Consulta de pedidos por ID.
-- Actualización correcta del estado de un pedido.
-- Respuesta `404` al actualizar un pedido inexistente.
-- Respuesta `400` al enviar un estado inválido.
-
-## Endpoints
-
-### Categorías
-
-| Método | Endpoint | Descripción |
-| --- | --- | --- |
-| `POST` | `/api/categorias` | Crear una categoría |
-| `GET` | `/api/categorias` | Listar categorías |
-| `GET` | `/api/categorias/{id}` | Buscar una categoría por ID |
-| `PUT` | `/api/categorias/{id}` | Actualizar una categoría |
-| `DELETE` | `/api/categorias/{id}` | Eliminar una categoría |
-
-### Productos
-
-| Método | Endpoint | Descripción |
-| --- | --- | --- |
-| `POST` | `/api/productos` | Crear un producto |
-| `GET` | `/api/productos` | Listar productos |
-| `GET` | `/api/productos/{id}` | Buscar un producto por ID |
-| `PUT` | `/api/productos/{id}` | Actualizar un producto |
-| `DELETE` | `/api/productos/{id}` | Eliminar un producto |
-
-### Pedidos
-
-| Método | Endpoint | Descripción |
-| --- | --- | --- |
-| `POST` | `/api/pedidos` | Crear un pedido |
-| `GET` | `/api/pedidos` | Listar todos los pedidos |
-| `GET` | `/api/pedidos/{id}` | Buscar un pedido por ID |
-| `PATCH` | `/api/pedidos/{id}/estado` | Actualizar el estado de un pedido |
-
-## Códigos HTTP utilizados
-
-| Código | Significado |
-| --- | --- |
-| `200 OK` | La operación se realizó correctamente |
-| `201 Created` | El recurso fue creado correctamente |
-| `204 No Content` | El recurso fue eliminado correctamente |
-| `400 Bad Request` | Los datos enviados no son válidos |
-| `404 Not Found` | El recurso solicitado no existe |
+- Contexto de Spring Boot.
+- CRUD y validaciones de categorías y productos.
+- Acceso público y autenticación administrativa.
+- Asociación y eliminación de imágenes.
+- Carga multipart válida e inválida.
+- Límite máximo de fotografías.
+- Creación y consulta de pedidos.
+- Cálculo de subtotales y total.
+- Descuento y reposición de stock.
+- Rollback por producto inexistente o stock insuficiente.
+- Filtrado de pedidos por estado.
+- Transiciones válidas, inválidas y estados finales.
 
 ## Ejemplos de uso
 
-La aplicación debe estar ejecutándose antes de utilizar estos comandos.
-
-### Listar categorías
-
-```bash
-curl -i http://localhost:8080/api/categorias
-```
-
-### Crear una categoría
-
-```bash
-curl -i -X POST http://localhost:8080/api/categorias \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nombre": "Abrigos"
-  }'
-```
-
-### Buscar una categoría por ID
-
-```bash
-curl -i http://localhost:8080/api/categorias/1
-```
-
-### Listar productos
+### Consultar el catálogo público
 
 ```bash
 curl -i http://localhost:8080/api/productos
 ```
 
-### Crear un producto
+### Crear un producto como administrador
 
-Antes de ejecutar este ejemplo debe existir la categoría con ID `1`.
+Antes debe existir la categoría indicada por `categoriaId`.
 
 ```bash
-curl -i -X POST http://localhost:8080/api/productos \
+curl -i -u "$BEAGI_ADMIN_USERNAME:$BEAGI_ADMIN_PASSWORD" \
+  -X POST http://localhost:8080/api/productos \
   -H "Content-Type: application/json" \
   -d '{
     "nombre": "Abrigo negro",
@@ -340,21 +356,24 @@ curl -i -X POST http://localhost:8080/api/productos \
     "precio": 15990,
     "stock": 5,
     "disponible": true,
-    "categoria": {
-      "id": 1
-    }
+    "nuevo": true,
+    "destacado": false,
+    "categoriaId": 1,
+    "talla": "M",
+    "estado": "Excelente estado"
   }'
 ```
 
-### Buscar un producto por ID
+### Subir imágenes a un producto
 
 ```bash
-curl -i http://localhost:8080/api/productos/1
+curl -i -u "$BEAGI_ADMIN_USERNAME:$BEAGI_ADMIN_PASSWORD" \
+  -X POST http://localhost:8080/api/productos/1/imagenes/archivos \
+  -F "archivos=@frente.jpg" \
+  -F "archivos=@detalle.webp"
 ```
 
-### Crear un pedido
-
-Antes de ejecutar este ejemplo debe existir el producto con ID `1` y debe tener stock disponible.
+### Crear un pedido público
 
 ```bash
 curl -i -X POST http://localhost:8080/api/pedidos \
@@ -363,7 +382,7 @@ curl -i -X POST http://localhost:8080/api/pedidos \
     "nombreCliente": "Cliente prueba",
     "telefonoCliente": "+56911112222",
     "direccionEntrega": "San Felipe",
-    "observaciones": "Pedido de prueba",
+    "observaciones": "Contactar antes de entregar",
     "detalles": [
       {
         "productoId": 1,
@@ -373,181 +392,67 @@ curl -i -X POST http://localhost:8080/api/pedidos \
   }'
 ```
 
-### Listar pedidos
-
-```bash
-curl -i http://localhost:8080/api/pedidos
-```
-
-### Buscar un pedido por ID
-
-```bash
-curl -i http://localhost:8080/api/pedidos/1
-```
-
 ### Actualizar el estado de un pedido
 
 ```bash
-curl -i -X PATCH http://localhost:8080/api/pedidos/1/estado \
+curl -i -u "$BEAGI_ADMIN_USERNAME:$BEAGI_ADMIN_PASSWORD" \
+  -X PATCH http://localhost:8080/api/pedidos/1/estado \
   -H "Content-Type: application/json" \
   -d '{
     "estado": "CONFIRMADO"
   }'
 ```
 
-Los estados aceptados actualmente son:
+## Códigos HTTP principales
 
-```text
-PENDIENTE
-CONFIRMADO
-ENTREGADO
-CANCELADO
-```
+| Código | Uso |
+| --- | --- |
+| `200 OK` | Consulta o actualización correcta |
+| `201 Created` | Recurso creado correctamente |
+| `204 No Content` | Recurso eliminado correctamente |
+| `400 Bad Request` | Solicitud, archivo o estado con formato inválido |
+| `401 Unauthorized` | Operación administrativa sin credenciales válidas |
+| `404 Not Found` | Recurso inexistente |
+| `409 Conflict` | Transición de estado no permitida |
 
-Si se envía un estado que no existe, por ejemplo `NO_EXISTE`, la API responde con `400 Bad Request`.
+## Despliegue
 
-## Ejemplo de comunicación mediante JSON
+La aplicación incluye un `Dockerfile` multi-stage:
 
-El frontend puede enviar una solicitud como esta:
+1. Maven compila y empaqueta la aplicación con Java 21.
+2. Una imagen JRE independiente ejecuta únicamente el archivo JAR final.
+3. Render recibe las variables de entorno y expone el puerto asignado.
+4. La API se conecta a PostgreSQL en Neon y almacena las imágenes en Cloudinary.
 
-```json
-{
-  "nombreCliente": "Mateo",
-  "telefonoCliente": "+56911112222",
-  "direccionEntrega": "San Felipe",
-  "detalles": [
-    {
-      "productoId": 1,
-      "cantidad": 2
-    }
-  ]
-}
-```
+Despliegue actual:
 
-El backend procesa la información, calcula los valores, descuenta el stock y responde con otro objeto JSON que contiene el pedido creado.
+- **API:** [beagi-backend.onrender.com](https://beagi-backend.onrender.com/api/productos)
+- **Frontend:** [BeaGi ModaCircular](https://mateocuetoc-hub.github.io/BeaGi-ModaCircular/)
 
-## Reglas de negocio de los pedidos
+## Estado actual
 
-Los precios y totales se calculan en el servidor. El cliente no puede establecer manualmente el valor de un producto.
+- [x] Persistencia con PostgreSQL.
+- [x] CRUD de categorías y productos.
+- [x] DTOs y validación de solicitudes.
+- [x] Pedidos con cálculo de totales y control transaccional de stock.
+- [x] Reglas de transición y reposición de stock por cancelación.
+- [x] Gestión de imágenes ordenadas por producto.
+- [x] Carga de imágenes mediante Cloudinary.
+- [x] Seguridad administrativa con HTTP Basic.
+- [x] Integración CORS con el frontend.
+- [x] Perfil de pruebas con H2 y 41 pruebas aprobadas.
+- [x] Contenedor Docker y despliegue en Render.
+- [ ] Documentación interactiva con OpenAPI/Swagger.
+- [ ] Migraciones versionadas con Flyway.
+- [ ] Paginación y búsqueda desde la API.
+- [ ] Protección adicional frente a pedidos concurrentes.
+- [ ] Integración continua con GitHub Actions.
 
-Al crear un pedido:
+## Repositorios relacionados
 
-1. Se busca cada producto solicitado.
-2. Se comprueba que el producto exista.
-3. Se verifica que tenga stock suficiente.
-4. Se copia su precio actual como precio unitario.
-5. Se calcula el subtotal de cada detalle.
-6. Se descuenta la cantidad correspondiente del stock.
-7. Se calcula el total completo del pedido.
-8. Se asigna el estado inicial `PENDIENTE`.
-9. Se guarda el pedido junto con sus detalles.
-
-El proceso utiliza `@Transactional`.
-
-Esto significa que, si cualquier producto falla, el pedido completo se revierte y no queda stock descontado parcialmente.
-
-## Actualización del estado de un pedido
-
-El estado se modifica mediante:
-
-```http
-PATCH /api/pedidos/{id}/estado
-```
-
-Ejemplo del cuerpo JSON:
-
-```json
-{
-  "estado": "ENTREGADO"
-}
-```
-
-La API:
-
-1. Busca el pedido solicitado.
-2. Devuelve `404 Not Found` si el pedido no existe.
-3. Comprueba que el estado pertenezca al enum `EstadoPedido`.
-4. Devuelve `400 Bad Request` si el valor no es válido.
-5. Actualiza y guarda el pedido.
-6. Devuelve el pedido actualizado con `200 OK`.
-
-## Base de datos de pruebas
-
-Las pruebas automáticas utilizan H2 mediante el perfil `test`.
-
-Archivo de configuración:
-
-```text
-src/test/resources/application-test.properties
-```
-
-Durante las pruebas:
-
-- Se crea una base de datos temporal en memoria.
-- Se genera el esquema automáticamente.
-- No se utiliza PostgreSQL.
-- No se necesita la contraseña real.
-- Los datos desaparecen al terminar las pruebas.
-
-## Estado actual del proyecto
-
-El backend ya cuenta con:
-
-- Persistencia mediante PostgreSQL.
-- CRUD de categorías.
-- CRUD de productos.
-- Relación entre productos y categorías.
-- Creación y listado de pedidos.
-- Consulta de pedidos por ID.
-- Actualización del estado de pedidos.
-- Filtrado de pedidos por estado.
-- Detalles de pedido.
-- Cálculo de subtotales y total.
-- Descuento automático de stock.
-- Manejo de productos inexistentes.
-- Manejo de stock insuficiente.
-- Transacciones y rollback.
-- Validación de solicitudes.
-- Perfil de pruebas con H2.
-- Pruebas de integración con MockMvc.
-- 18 pruebas automáticas aprobadas.
-
-## Próximos pasos
-
-- Implementar reglas de transición entre estados.
-- Impedir cambios inválidos, como volver un pedido `ENTREGADO` a `PENDIENTE`.
-- Definir las reglas para cancelar pedidos.
-- Reponer stock cuando corresponda.
-- Crear DTOs de respuesta.
-- Implementar un manejador global de errores.
-- Añadir Swagger/OpenAPI.
-- Agregar paginación.
-- Mejorar la validación de solicitudes.
-- Proteger el stock frente a pedidos concurrentes.
-- Incorporar migraciones con Flyway.
-- Separar los perfiles de desarrollo y producción.
-- Conectar el backend con el frontend de BeaGi Moda Circular.
-- Incorporar Docker.
-- Preparar el despliegue de la API y PostgreSQL.
-- Agregar integración continua con GitHub Actions.
-- Incorporar autenticación para administración.
-
-## Seguridad
-
-Este repositorio no debe contener:
-
-- Contraseñas.
-- Credenciales de PostgreSQL.
-- Tokens.
-- Claves privadas.
-- Variables de entorno reales.
-
-Las credenciales deben configurarse localmente o mediante variables de entorno del servicio de despliegue.
+- **Backend:** [mateocuetoc-hub/beagi-backend](https://github.com/mateocuetoc-hub/beagi-backend)
+- **Frontend:** [mateocuetoc-hub/BeaGi-ModaCircular](https://github.com/mateocuetoc-hub/BeaGi-ModaCircular)
 
 ## Autor
 
-**Mateo Cueto**
-
-Estudiante de Ingeniería en Informática en la Pontificia Universidad Católica de Valparaíso.
-
-Proyecto desarrollado con fines de aprendizaje, portafolio e integración con BeaGi Moda Circular.s
+Desarrollado por [Mateo Cueto](https://github.com/mateocuetoc-hub), estudiante de Ingeniería en Informática de la Pontificia Universidad Católica de Valparaíso, como solución para una pyme y proyecto de portafolio.
