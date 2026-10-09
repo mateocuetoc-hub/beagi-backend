@@ -1,10 +1,31 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
-### STS ###
+# ========================================
+# BEAGI BACKEND - GITIGNORE
+# ========================================
+
+# Documentación generada por Spring Initializr
+HELP.md
+
+# ========================================
+# 1. Compilación y archivos generados
+# ========================================
+target/
+build/
+dist/
+nbbuild/
+nbdist/
+
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# Ejecutables locales
+/a.out
+
+# ========================================
+# 2. Entornos de desarrollo (IDE)
+# ========================================
+
+# Spring Tool Suite / Eclipse
 .apt_generated
 .classpath
 .factorypath
@@ -13,24 +34,35 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# Visual Studio Code
 .vscode/
 
-# Configuración local privada
-.env.local
+# ========================================
+# 3. Credenciales y variables de entorno
+# ========================================
+.env
+.env.*
+!.env.example
+
+# ========================================
+# 4. Archivos temporales
+# ========================================
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# Archivos temporales de sistemas operativos
+.DS_Store
+Thumbs.db
